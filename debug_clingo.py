@@ -86,6 +86,7 @@ def debug_step(other, constraints, step):
     program = "\n".join(other + constraints[:step] + constraints[step + 1:])
     ctl.add("base", [], program)
     ctl.configuration.solve.parallel_mode = os.cpu_count()
+    ctl.configuration.solve.opt_mode = 'ignore'
     ctl.ground([("base", [])])
     res = ctl.solve(on_model=on_model)
     if res.satisfiable:
