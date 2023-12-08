@@ -3,6 +3,7 @@
 import argparse
 import clingo
 import logging
+import os
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -112,8 +113,12 @@ def main():
         action='store_false',
         dest='check_full_problem',
         help='Skip checking whether the full problem is satisfiable')
+    parser.add_argument('--outfile', '-o', help='Output file')
     args = parser.parse_args()
     log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
+    if args.outfile:
+        fh = logging.FileHandler(args.outfile)
+        log.addHandler(fh)
     if args.get_num_steps:
         log.setLevel(logging.ERROR)
         print(get_num_steps(args.files))
