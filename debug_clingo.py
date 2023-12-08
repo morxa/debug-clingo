@@ -70,7 +70,7 @@ def check_full_problem(other, constraints):
 def debug_program(other, constraints):
     found = False
     for i in range(len(constraints)):
-        step = i + 1
+        step = i
         if debug_step(other, constraints, step):
             found = True
     if not found:
@@ -82,7 +82,7 @@ def debug_program(other, constraints):
 def debug_step(other, constraints, step):
     log.debug(f'Checking constraint {step}: {constraints[step]}')
     ctl = clingo.Control()
-    program = "\n".join(other + constraints[:step - 1] + constraints[step:])
+    program = "\n".join(other + constraints[:step] + constraints[step + 1:])
     ctl.add("base", [], program)
     ctl.ground([("base", [])])
     res = ctl.solve(on_model=on_model)
