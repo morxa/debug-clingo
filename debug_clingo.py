@@ -4,6 +4,7 @@ import argparse
 import clingo
 import logging
 import os
+import itertools
 
 logging.basicConfig()
 log = logging.getLogger(__name__)
@@ -68,29 +69,46 @@ def check_full_problem(other, constraints):
         return res.satisfiable
 
 
-def debug_program(other, constraints):
+def debug_program(other, constraints, max_constraints=2):
     found = False
-    for i in range(len(constraints)):
-        step = i
-        if debug_step(other, constraints, step):
-            found = True
+    for num_constraints in range(1, max_constraints + 1):
+        for steps in itertools.combinations(range(len(constraints)),
+                                            num_constraints):
+            if debug_step(other, constraints, steps):
+                found = True
+        if found:
+            break
     if not found:
-        log.info(
-            "Removing a single constraint does not make the problem satisfiable, giving up!"
-        )
+        log.info(f'Removing up to {max_constraints} constraints'
+                 ' does not make the program satisfiable, giving up!')
 
 
-def debug_step(other, constraints, step):
-    log.debug(f'Checking constraint {step}: {constraints[step]}')
+def debug_step(other, constraints, steps):
+    steps = sorted(steps)
+    log.debug('Checking constraint {}:\n{}'.format(
+        steps, "\n".join([constraints[step] for step in steps])))
     ctl = clingo.Control()
-    program = "\n".join(other + constraints[:step] + constraints[step + 1:])
+    selected_constraints = []
+    next_start = 0
+    for step in steps:
+        selected_constraints += constraints[next_start:step]
+        next_start = step + 1
+    selected_constraints += constraints[next_start:]
+
+    program = "\n".join(other + selected_constraints)
+    violating_constraints = [
+        c for c in constraints if c not in selected_constraints
+    ]
     ctl.add("base", [], program)
     ctl.configuration.solve.parallel_mode = os.cpu_count()
     ctl.configuration.solve.opt_mode = 'ignore'
     ctl.ground([("base", [])])
     res = ctl.solve(on_model=on_model)
     if res.satisfiable:
-        log.info(f"Constraint {step} is unsatisfiable: {constraints[step]}")
+        log.info(f'Constraints {", ".join([str(s) for s in steps])}'
+                 f' {"is" if len(violating_constraints) == 1 else "are"}'
+                 ' in conjunction unsatisfiable:\n'
+                 f'{"\n".join(violating_constraints)}')
     return res.satisfiable
 
 
@@ -110,11 +128,15 @@ def main():
                         action='store_true',
                         help='Get the number of steps')
     parser.add_argument(
-        '-n',
         '--skip-full-problem',
         action='store_false',
         dest='check_full_problem',
         help='Skip checking whether the full problem is satisfiable')
+    parser.add_argument('-n',
+                        '--num-constraints',
+                        type=int,
+                        default=1,
+                        help='Number of constraints to remove')
     parser.add_argument('--outfile', '-o', help='Output file')
     args = parser.parse_args()
     log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
@@ -133,9 +155,9 @@ def main():
         else:
             log.info("Complete problem is unsatisfiable, continuing...")
     if args.step:
-        debug_step(other, constraints, args.step)
+        debug_step(other, constraints, [args.step])
     else:
-        debug_program(other, constraints)
+        debug_program(other, constraints, args.num_constraints)
 
 
 if __name__ == '__main__':
