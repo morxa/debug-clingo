@@ -117,8 +117,9 @@ def main():
     parser.add_argument('files', help='The file(s) to debug', nargs='+')
     parser.add_argument('-v',
                         '--verbose',
-                        action='store_true',
-                        help='Verbose output')
+                        type=int,
+                        default=logging.INFO,
+                        help='Verbose output level')
     parser.add_argument(
         '-s',
         '--step',
@@ -139,7 +140,7 @@ def main():
                         help='Number of constraints to remove')
     parser.add_argument('--outfile', '-o', help='Output file')
     args = parser.parse_args()
-    log.setLevel(logging.DEBUG if args.verbose else logging.INFO)
+    log.setLevel(args.verbose)
     if args.outfile:
         fh = logging.FileHandler(args.outfile)
         log.addHandler(fh)
