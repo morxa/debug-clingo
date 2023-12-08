@@ -123,6 +123,8 @@ def main():
         if check_full_problem(other, constraints):
             log.info("Complete problem is satisfiable, nothing to debug!")
             return
+        else:
+            log.info("Complete problem is unsatisfiable, continuing...")
     if args.step:
         debug_step(other, constraints, args.step)
     else:
