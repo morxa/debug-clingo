@@ -78,6 +78,9 @@ def debug_program(other, constraints, max_constraints=2):
                 found = True
         if found:
             break
+        else:
+            log.info(f'Removing {num_constraints} constraint(s)'
+                     ' does not make the program satisfiable, trying more...')
     if not found:
         log.info(f'Removing up to {max_constraints} constraints'
                  ' does not make the program satisfiable, giving up!')
@@ -107,7 +110,7 @@ def debug_step(other, constraints, steps):
     if res.satisfiable:
         log.info(f'Constraints {", ".join([str(s) for s in steps])}'
                  f' {"is" if len(violating_constraints) == 1 else "are"}'
-                 ' in conjunction unsatisfiable:\n'
+                 ' unsatisfiable:\n'
                  f'{"\n".join(violating_constraints)}')
     return res.satisfiable
 
