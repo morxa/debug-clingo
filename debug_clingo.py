@@ -110,8 +110,7 @@ def debug_step(other, constraints, steps):
     if res.satisfiable:
         log.info(f'Constraints {", ".join([str(s) for s in steps])}'
                  f' {"is" if len(violating_constraints) == 1 else "are"}'
-                 ' unsatisfiable:\n'
-                 f'{"\n".join(violating_constraints)}')
+                 ' unsatisfiable:\n' + '\n'.join(violating_constraints))
     return res.satisfiable
 
 
